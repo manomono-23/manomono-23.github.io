@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>音声解析ビジュアライザー | 2025-04-21</title>
+  
+  <!-- p5.js ライブラリ -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/addons/p5.sound.min.js"></script>
+  
+  <!-- 共通の音声解析ロジック -->
+  <script src="../../js/audio-analyzer.js"></script>
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      overflow: hidden;
+      background-color: #000;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    
+    #canvas-container {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      height: 100%;
+    }
+    
+    /* p5.jsキャンバスのスタイルを制御 - アスペクト比を維持 */
+    canvas {
+      display: block !important;
+      margin: 0 auto !important;
+      
+      /* 以下はp5.jsが自動設定する属性をオーバーライドしないように !important を使用 */
+      max-width: 100% !important;
+      max-height: 100% !important;
+      
+      /* アスペクト比を維持しつつ最大サイズに */
+      object-fit: contain !important;
+    }
+    
+    .nav-hint {
+      position: fixed;
+      bottom: 20px;
+      left: 0;
+      width: 100%;
+      text-align: center;
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 14px;
+      z-index: 10;
+      pointer-events: none;
+      opacity: 0.8;
+      transition: opacity 0.5s;
+    }
+    
+    .nav-hint.hidden {
+      opacity: 0;
+    }
+    
+    .admin-link {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      color: rgba(255, 255, 255, 0.5);
+      text-decoration: none;
+      font-size: 14px;
+      z-index: 20;
+      padding: 5px 10px;
+      background-color: rgba(0, 0, 0, 0.3);
+      border-radius: 4px;
+    }
+    
+    .home-link {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      color: rgba(255, 255, 255, 0.5);
+      text-decoration: none;
+      font-size: 14px;
+      z-index: 20;
+      padding: 5px 10px;
+      background-color: rgba(0, 0, 0, 0.3);
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <!-- 音楽ファイル -->
+  <audio id="music" loop preload="auto" style="display: none;">
+    <source src="music.mp3" type="audio/mpeg">
+    お使いのブラウザは音声要素をサポートしていません。
+  </audio>
+  
+  <!-- p5.jsキャンバスコンテナ - 固定比率のためのラッパー -->
+  <div id="canvas-container"></div>
+  
+  <!-- ナビゲーションヒント -->
+  <div class="nav-hint">
+    ← 左側をタップ：前の日 | 中央をタップ：再生/停止 | 右側をタップ：次の日 →
+  </div>
+  
+  <!-- 管理者ページへのリンク -->
+  <a href="admin.html" class="admin-link">設定</a>
+  
+  <!-- ホームページへのリンク -->
+  <a href="../../index.html" class="home-link">ホーム</a>
+  
+  <!-- ビジュアライズ処理 -->
+  <script src="sketch.js"></script>
+  
+  <script>
+    // キャンバスのスケーリング問題を修正するためのコード
+    document.addEventListener('DOMContentLoaded', function() {
+      // p5.jsでは自動的にキャンバスを生成して追加するため、
+      // この要素をターゲットに指定してキャンバスを生成
+      let canvasContainer = document.getElementById('canvas-container');
+      
+      // p5.jsがキャンバスを作成した後に追加の調整を行う
+      setTimeout(function() {
+        let canvas = document.querySelector('canvas');
+        if (canvas) {
+          // キャンバスに明示的なID付与（デバッグ用）
+          canvas.id = 'p5-canvas';
+          
+          // キャンバスのスタイルを最適化
+          adjustCanvasStyle(canvas);
+        }
+      }, 100);
+      
+      // ウィンドウリサイズ時に再調整
+      window.addEventListener('resize', function() {
+        let canvas = document.querySelector('canvas');
+        if (canvas) {
+          adjustCanvasStyle(canvas);
+        }
+      });
+    });
+    
+    // キャンバススタイルを調整する関数
+    function adjustCanvasStyle(canvas) {
+      const targetRatio = 1200 / 1900; // 目標アスペクト比
+      const containerWidth = window.innerWidth;
+      const containerHeight = window.innerHeight;
+      
+      // コンテナのアスペクト比が目標より広い場合
+      if (containerWidth / containerHeight > targetRatio) {
+        // 高さに合わせる
+        canvas.style.width = 'auto';
+        canvas.style.height = '100vh';
+      } else {
+        // 幅に合わせる
+        canvas.style.width = '100vw';
+        canvas.style.height = 'auto';
+      }
+    }
+    
+    // ナビゲーションヒントの一時的な表示
+    setTimeout(() => {
+      document.querySelector('.nav-hint').classList.add('hidden');
+    }, 5000);
+    
+    // タッチイベントの設定
+    document.addEventListener('touchstart', handleTouch);
+    document.addEventListener('mousedown', handleClick);
+    
+    function handleTouch(event) {
+      event.preventDefault(); // デフォルトのスクロールを防止
+      handleTapNavigation(event);
+    }
+    
+    function handleClick(event) {
+      handleTapNavigation(event);
+    }
+  </script>
+</body>
+</html>

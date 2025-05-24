@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>メール配信サービス - 7日間無料トライアル</title>
+    <script src="https://js.stripe.com/v3/"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            animation: slideUp 0.6s ease-out;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 28px;
+            font-weight: 700;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .plan-options {
+            margin: 15px 0;
+        }
+        
+        .plan-option {
+            margin-bottom: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .plan-option:hover {
+            border-color: #667eea;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+        }
+        
+        .plan-option input[type="radio"] {
+            display: none;
+        }
+        
+        .plan-option input[type="radio"]:checked + label {
+            background: #f0f3ff;
+            border-color: #667eea;
+        }
+        
+        .plan-option label {
+            display: block;
+            padding: 20px;
+            cursor: pointer;
+            border: none;
+            background: white;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .plan-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .plan-name {
+            font-weight: 600;
+            font-size: 18px;
+            color: #333;
+        }
+        
+        .plan-price {
+            font-weight: 700;
+            font-size: 20px;
+            color: #667eea;
+        }
+        
+        .plan-description {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        input[type="checkbox"] {
+            margin-right: 8px;
+        }
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .pricing-card {
+            background: #f8f9ff;
+            border: 2px solid #e1e5e9;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            transition: all 0.3s ease;
+        }
+        
+        .pricing-card.selected {
+            border-color: #667eea;
+            background: #f0f3ff;
+        }
+        
+        .price {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        
+        .price-description {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .trial-badge {
+            background: #4CAF50;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+        
+        .submit-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 18px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .features {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .features h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        
+        .features ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .features li {
+            padding: 8px 0;
+            color: #666;
+            position: relative;
+            padding-left: 25px;
+        }
+        
+        .features li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #4CAF50;
+            font-weight: bold;
+        }
+        
+        .error-message {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📧 プレミアムメール配信</h1>
+        <p class="subtitle">重要な情報をいち早くお届けします</p>
+        
+        <div class="trial-badge">7日間無料トライアル</div>
+        
+        <form id="subscription-form">
+            <div class="form-group">
+                <input type="checkbox" id="same-email" onchange="toggleEmailFields()" checked>
+                <label for="same-email" style="display: inline; margin-left: 8px; font-weight: 600;">
+                    配信先と支払い用メールアドレスを同じにする
+                </label>
+            </div>
+            
+            <!-- 同じメールアドレスの場合 -->
+            <div id="single-email-group" class="form-group">
+                <label for="single-email">📧 メールアドレス</label>
+                <input type="email" id="single-email" required 
+                       placeholder="your-email@example.com">
+            </div>
+            
+            <!-- 別々のメールアドレスの場合 -->
+            <div id="separate-email-group" style="display: none;">
+                <div class="form-group">
+                    <label for="delivery-email">📧 配信先メールアドレス</label>
+                    <input type="email" id="delivery-email" 
+                           placeholder="newsletter@yourcompany.com">
+                </div>
+                
+                <div class="form-group">
+                    <label for="payment-email">💳 支払い用メールアドレス</label>
+                    <input type="email" id="payment-email" 
+                           placeholder="billing@yourcompany.com">
+                    <small style="color: #666; font-size: 13px;">
+                        ※ 請求書・領収書の送付先になります
+                    </small>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="subscriber-name">👤 登録者名</label>
+                <input type="text" id="subscriber-name" required 
+                       placeholder="山田太郎">
+            </div>
+            
+            <div class="form-group">
+                <label>📊 プランを選択してください</label>
+                <div class="plan-options">
+                    <div class="plan-option" data-plan="individual">
+                        <input type="radio" name="plan" value="individual" id="plan-individual" checked>
+                        <label for="plan-individual">
+                            <div class="plan-header">
+                                <span class="plan-name">個人プラン</span>
+                                <span class="plan-price">¥500/月</span>
+                            </div>
+                            <div class="plan-description">個人利用向け</div>
+                        </label>
+                    </div>
+                    
+                    <div class="plan-option" data-plan="small-team">
+                        <input type="radio" name="plan" value="small-team" id="plan-small-team">
+                        <label for="plan-small-team">
+                            <div class="plan-header">
+                                <span class="plan-name">小規模チーム</span>
+                                <span class="plan-price">¥1,500/月</span>
+                            </div>
+                            <div class="plan-description">10人までの配信</div>
+                        </label>
+                    </div>
+                    
+                    <div class="plan-option" data-plan="large-team">
+                        <input type="radio" name="plan" value="large-team" id="plan-large-team">
+                        <label for="plan-large-team">
+                            <div class="plan-header">
+                                <span class="plan-name">大規模チーム</span>
+                                <span class="plan-price">¥3,000/月</span>
+                            </div>
+                            <div class="plan-description">11人以上の配信</div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="error-message" id="form-error">全ての項目を入力してください</div>
+            
+            <div id="selected-plan-display" class="pricing-card">
+                <div class="price">¥500/月</div>
+                <div class="price-description">個人プラン</div>
+            </div>
+            
+            <div class="features">
+                <h3>サービス内容</h3>
+                <ul>
+                    <li>重要ニュース・トレンドの厳選配信</li>
+                    <li>週3回の定期配信</li>
+                    <li>専門家による分析レポート</li>
+                    <li>いつでも配信停止可能</li>
+                </ul>
+            </div>
+            
+            <button type="submit" class="submit-btn" id="submit-btn">
+                7日間無料で始める
+            </button>
+        </form>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>決済画面に移動中...</p>
+        </div>
+    </div>
+
+    <script>
+        const stripe = Stripe('pk_test_51RSFauIZcGrzosQpSE3qwyFaP4iLNBWGj3pDd2L1CQLp66CQ4GPR5SjWffu7vTNSGKC6HeQrhBohsol5yaL3JuLc00Y4go6hTK');
+        
+        // 環境に応じてAPI URLを設定
+        const API_BASE_URL = (() => {
+            const hostname = window.location.hostname;
+            if (hostname === 'localhost' || hostname === '127.0.0.1') {
+                // 開発環境
+                return 'https://asia-northeast1-stripe-subscription-manager.cloudfunctions.net';
+            } else if (hostname === 'subscribe.yourservice.com') {
+                // 本番環境
+                return 'https://api.yourservice.com';
+            } else {
+                // ステージング環境
+                return 'https://staging-api.yourservice.com';
+            }
+        })();
+        
+        console.log('Using API URL:', API_BASE_URL);
+        
+        // メールアドレス入力フィールドの切り替え
+        function toggleEmailFields() {
+            const sameEmail = document.getElementById('same-email').checked;
+            const singleEmailGroup = document.getElementById('single-email-group');
+            const separateEmailGroup = document.getElementById('separate-email-group');
+            
+            if (sameEmail) {
+                singleEmailGroup.style.display = 'block';
+                separateEmailGroup.style.display = 'none';
+                // 必須属性の切り替え
+                document.getElementById('single-email').required = true;
+                document.getElementById('delivery-email').required = false;
+                document.getElementById('payment-email').required = false;
+            } else {
+                singleEmailGroup.style.display = 'none';
+                separateEmailGroup.style.display = 'block';
+                // 必須属性の切り替え
+                document.getElementById('single-email').required = false;
+                document.getElementById('delivery-email').required = true;
+                document.getElementById('payment-email').required = true;
+            }
+        }
+        
+        // プラン選択時の表示更新
+        document.querySelectorAll('input[name="plan"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                updateSelectedPlan(this.value);
+            });
+        });
+        
+        function updateSelectedPlan(planType) {
+            const display = document.getElementById('selected-plan-display');
+            const planData = {
+                'individual': {
+                    name: '個人プラン',
+                    price: '¥500/月',
+                    description: '個人利用向け'
+                },
+                'small-team': {
+                    name: '小規模チーム',
+                    price: '¥1,500/月',
+                    description: '10人までの配信'
+                },
+                'large-team': {
+                    name: '大規模チーム',
+                    price: '¥3,000/月',
+                    description: '11人以上の配信'
+                }
+            };
+            
+            const plan = planData[planType];
+            display.innerHTML = `
+                <div class="price">${plan.price}</div>
+                <div class="price-description">${plan.name} - ${plan.description}</div>
+            `;
+        }
+        
+        // フォーム送信処理
+        document.getElementById('subscription-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const sameEmail = document.getElementById('same-email').checked;
+            const subscriberName = document.getElementById('subscriber-name').value;
+            const selectedPlan = document.querySelector('input[name="plan"]:checked').value;
+            
+            let deliveryEmail, paymentEmail;
+            
+            if (sameEmail) {
+                const email = document.getElementById('single-email').value;
+                deliveryEmail = email;
+                paymentEmail = email;
+            } else {
+                deliveryEmail = document.getElementById('delivery-email').value;
+                paymentEmail = document.getElementById('payment-email').value;
+            }
+            
+            const submitBtn = document.getElementById('submit-btn');
+            const loading = document.getElementById('loading');
+            const errorDiv = document.getElementById('form-error');
+            
+            // バリデーション
+            if (!deliveryEmail || !paymentEmail || !subscriberName) {
+                errorDiv.textContent = '全ての項目を入力してください';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            // ローディング表示
+            submitBtn.style.display = 'none';
+            loading.style.display = 'block';
+            errorDiv.style.display = 'none';
+            
+            try {
+                // バックエンドにデータ送信
+                const response = await fetch(`${API_BASE_URL}/createSubscription`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        deliveryEmail: deliveryEmail,
+                        paymentEmail: paymentEmail,
+                        subscriberName: subscriberName,
+                        planType: selectedPlan
+                    })
+                });
+                
+                const { sessionId, planInfo } = await response.json();
+                
+                // Stripe Checkout画面に移動
+                const { error } = await stripe.redirectToCheckout({
+                    sessionId: sessionId
+                });
+                
+                if (error) {
+                    console.error('Stripe error:', error);
+                    errorDiv.textContent = '決済画面への移動に失敗しました。もう一度お試しください。';
+                    errorDiv.style.display = 'block';
+                    submitBtn.style.display = 'block';
+                    loading.style.display = 'none';
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                errorDiv.textContent = 'エラーが発生しました。もう一度お試しください。';
+                errorDiv.style.display = 'block';
+                submitBtn.style.display = 'block';
+                loading.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

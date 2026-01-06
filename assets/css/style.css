@@ -131,6 +131,16 @@ h1 {
     margin-left: 5px;
 }
 
+.tech-tags {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: clamp(0.8rem, 1.5vw, 1rem);
+    margin-top: 15px;
+    opacity: 0.7;
+    letter-spacing: 0.1em;
+    font-weight: 300;
+}
+
 /* --- GLITCH EFFECT --- */
 .glitch-wrapper {
     position: relative;

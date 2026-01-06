@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>manomono | Hardware & Software</title>
+    <style>
+        /* --- CORE SETTINGS --- */
+        :root {
+            --bg-color: #FFFFFF;
+            --text-color: #000000;
+            --accent-color: #000000;
+            --cursor-color: #000000;
+            --font-main: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", sans-serif;
+            --font-mono: "Courier New", Consolas, monospace;
+            --transition-speed: 0.6s;
+        }
+
+        /* ターミナルモード（反転） */
+        body.terminal-mode {
+            --bg-color: #050505;
+            --text-color: #00FF41; /* ターミナルグリーン */
+            --accent-color: #00FF41;
+            --cursor-color: #00FF41;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            cursor: none; /* デフォルトカーソルを消す */
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-main);
+            transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
+            overflow-x: hidden;
+            width: 100%;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /* --- CUSTOM CURSOR --- */
+        #cursor {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 12px;
+            height: 12px;
+            background-color: var(--cursor-color);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            transition: width 0.2s, height 0.2s, background-color 0.2s, border-radius 0.2s;
+            mix-blend-mode: difference;
+        }
+
+        /* リンクホバー時のカーソル（ターミナル風キャレット） */
+        body.hovering #cursor {
+            width: 20px;
+            height: 30px;
+            border-radius: 0;
+            background-color: var(--cursor-color);
+            opacity: 0.8;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        /* --- LAYOUT --- */
+        section {
+            min-height: 100vh;
+            padding: 4vw;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* --- HEADER / HERO --- */
+        .logo {
+            font-size: 2rem;
+            font-weight: bold;
+            position: fixed;
+            top: 40px;
+            left: 40px;
+            z-index: 100;
+            letter-spacing: -0.05em;
+        }
+
+        .hero-content {
+            margin-top: 10vh;
+        }
+
+        h1 {
+            font-size: clamp(3rem, 8vw, 10rem);
+            line-height: 0.9;
+            font-weight: 800;
+            margin-bottom: 40px;
+            text-transform: uppercase;
+        }
+
+        .copy-jp {
+            font-size: clamp(1rem, 2vw, 1.5rem);
+            font-weight: 400;
+            line-height: 1.8;
+            max-width: 600px;
+            margin-left: 5px;
+        }
+
+        /* --- GLITCH EFFECT --- */
+        .glitch-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .glitch {
+            position: relative;
+        }
+
+        .glitch::before,
+        .glitch::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.8;
+        }
+
+        .glitch::before {
+            color: #ff00c1;
+            clip-path: polygon(0 0, 100% 0, 100% 33%, 0 33%);
+            transform: translate(-2px, -2px);
+            animation: glitch-anim-1 2s infinite linear alternate-reverse;
+            display: none; /* ホバーや特定のタイミングで表示させる */
+        }
+
+        .glitch::after {
+            color: #00fff9;
+            clip-path: polygon(0 67%, 100% 67%, 100% 100%, 0 100%);
+            transform: translate(2px, 2px);
+            animation: glitch-anim-2 3s infinite linear alternate-reverse;
+            display: none;
+        }
+        
+        /* 常に少しノイズが走る演出 */
+        .glitch:hover::before, .glitch:hover::after {
+            display: block;
+        }
+
+        @keyframes glitch-anim-1 {
+            0% { clip-path: inset(20% 0 80% 0); }
+            20% { clip-path: inset(60% 0 10% 0); }
+            40% { clip-path: inset(40% 0 50% 0); }
+            60% { clip-path: inset(80% 0 5% 0); }
+            80% { clip-path: inset(10% 0 60% 0); }
+            100% { clip-path: inset(30% 0 30% 0); }
+        }
+        @keyframes glitch-anim-2 {
+            0% { clip-path: inset(10% 0 60% 0); }
+            20% { clip-path: inset(30% 0 20% 0); }
+            40% { clip-path: inset(70% 0 10% 0); }
+            60% { clip-path: inset(20% 0 50% 0); }
+            80% { clip-path: inset(50% 0 30% 0); }
+            100% { clip-path: inset(5% 0 80% 0); }
+        }
+
+        /* --- WORKS LINK SECTION --- */
+        #works {
+            align-items: center;
+            text-align: center;
+        }
+
+        .portfolio-link {
+            font-family: var(--font-mono);
+            font-size: clamp(2rem, 5vw, 6rem);
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+            position: relative;
+            display: inline-block;
+        }
+
+        .portfolio-link:hover {
+            border-bottom: 2px solid var(--accent-color);
+            letter-spacing: 0.1em;
+        }
+
+        .portfolio-link::before {
+            content: "> ";
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .portfolio-link:hover::before {
+            opacity: 1;
+        }
+
+        .note {
+            margin-top: 20px;
+            font-size: 0.9rem;
+            font-family: var(--font-mono);
+            opacity: 0.7;
+        }
+
+        /* --- CONTACT SECTION --- */
+        #contact {
+            justify-content: center;
+        }
+
+        .contact-wrapper {
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .contact-title {
+            font-size: 3rem;
+            margin-bottom: 40px;
+            font-family: var(--font-mono);
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        input, textarea {
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid var(--text-color);
+            padding: 15px 0;
+            font-size: 1.2rem;
+            color: var(--text-color);
+            font-family: var(--font-mono);
+            outline: none;
+            border-radius: 0;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, textarea:focus {
+            border-bottom: 2px solid var(--accent-color);
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 20px 40px;
+            background: transparent;
+            border: 1px solid var(--text-color);
+            color: var(--text-color);
+            font-size: 1.2rem;
+            font-family: var(--font-mono);
+            cursor: none;
+            align-self: flex-start;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background: var(--text-color);
+            color: var(--bg-color);
+        }
+
+        /* --- MOBILE ADJUSTMENTS --- */
+        @media (max-width: 768px) {
+            .logo { top: 20px; left: 20px; font-size: 1.5rem; }
+            section { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="cursor"></div>
+
+    <header class="logo">
+        manomono
+    </header>
+
+    <section id="hero">
+        <div class="hero-content">
+            <h1 class="glitch-wrapper">
+                <span class="glitch" data-text="HARDWARE &">HARDWARE &</span><br>
+                <span class="glitch" data-text="SOFTWARE">SOFTWARE</span>
+            </h1>
+            <p class="copy-jp">
+                テクノロジーと創造性を横断し、<br>
+                アイディアをカタチにする。
+            </p>
+        </div>
+    </section>
+
+    <section id="works">
+        <a href="https://kawashimadaichi.tokyo/" target="_blank" class="portfolio-link interactive">
+            KAWASHIMADAICHI.TOKYO
+        </a>
+        <p class="note">/// Access Portfolio Terminal ///</p>
+    </section>
+
+    <section id="contact">
+        <div class="contact-wrapper">
+            <h2 class="contact-title">> Contact_</h2>
+            <form action="#" method="POST"> <input type="text" placeholder="Name" class="interactive" required>
+                <input type="email" placeholder="Email" class="interactive" required>
+                <textarea rows="4" placeholder="Message" class="interactive" required></textarea>
+                <button type="submit" class="interactive">SEND MESSAGE</button>
+            </form>
+        </div>
+    </section>
+
+    <script>
+        // --- CUSTOM CURSOR LOGIC ---
+        const cursor = document.getElementById('cursor');
+        const interactiveElements = document.querySelectorAll('.interactive, a, button');
+
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+        });
+
+        // Add hover effect for interactive elements
+        interactiveElements.forEach(el => {
+            el.addEventListener('mouseenter', () => document.body.classList.add('hovering'));
+            el.addEventListener('mouseleave', () => document.body.classList.remove('hovering'));
+        });
+
+        // --- THEME SWITCH ON SCROLL (Intersection Observer) ---
+        // ポートフォリオリンクのセクションが見えたら、黒背景・緑文字（ターミナルモード）にする
+        const worksSection = document.getElementById('works');
+        const contactSection = document.getElementById('contact');
+        
+        const observerOptions = {
+            root: null,
+            threshold: 0.3 // 画面の30%が入ったら発火
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    document.body.classList.add('terminal-mode');
+                } else {
+                    // 一番上のセクションに戻ったら白に戻す判定
+                    // (スクロール位置での簡易判定)
+                    if (window.scrollY < window.innerHeight / 2) {
+                        document.body.classList.remove('terminal-mode');
+                    }
+                }
+            });
+        }, observerOptions);
+
+        observer.observe(worksSection);
+        observer.observe(contactSection);
+
+    </script>
+</body>
+</html>
